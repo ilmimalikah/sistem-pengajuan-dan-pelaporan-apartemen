@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('laporan', function (Blueprint $table) {
+            $table->id('id_laporan');
+            $table->foreignId('id_pengguna')->constrained('pengguna', 'id_pengguna')->restrictOnDelete();
+            $table->foreignId('id_fasilitas')->constrained('fasilitas', 'id_fasilitas')->restrictOnDelete();
+            $table->foreignId('id_kategori')->constrained('kategori_masalah', 'id_kategori')->restrictOnDelete();
+            $table->foreignId('id_lokasi')->nullable()->constrained('lokasi', 'id_lokasi')->nullOnDelete();
+            $table->text('deskripsi');
+            $table->string('status', 20)->default('Menunggu');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('laporan');
+    }
+};
