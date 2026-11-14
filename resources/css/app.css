@@ -6,4 +6,67 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-paper: #f8f7f4;
+    --color-ink: #1a1a1a;
+    --color-ink-soft: #6b6b6b;
+    --color-line: #e4e1db;
+    --color-line-soft: #efede8;
+    --color-brand: #6b0f0f;
+    --color-brand-hover: #571010;
+    --color-brand-soft: #f7f0ef;
+
+    --radius-xs: 3px;
+}
+
+@layer base {
+    body {
+        @apply bg-paper text-ink antialiased;
+    }
+
+    h1, h2, h3 {
+        @apply font-semibold tracking-[-0.02em];
+    }
+
+    ::selection {
+        @apply bg-brand text-white;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex h-[38px] items-center justify-center gap-2 rounded-xs bg-brand px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    }
+
+    .btn-ghost {
+        @apply inline-flex h-[38px] items-center justify-center gap-2 rounded-xs border border-line bg-transparent px-4 text-sm font-medium text-ink transition-colors duration-150 hover:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    }
+
+    .btn-text {
+        @apply inline-flex items-center gap-2 text-sm text-ink-soft transition-colors duration-150 hover:text-brand;
+    }
+
+    .field-label {
+        @apply mb-1.5 block text-[13px] font-medium text-ink;
+    }
+
+    .field-input {
+        @apply h-10 w-full rounded-xs border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-soft/60 focus:border-brand focus:outline-none;
+    }
+
+    textarea.field-input {
+        @apply h-auto py-2.5;
+    }
+
+    .table-th {
+        @apply border-b border-line px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-soft;
+    }
+
+    .table-td {
+        @apply border-b border-line-soft px-4 py-3.5 text-sm;
+    }
+
+    .card {
+        @apply rounded-xs border border-line bg-white;
+    }
 }
