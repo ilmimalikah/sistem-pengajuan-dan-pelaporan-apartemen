@@ -1,7 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KategoriMasalahController;
+use App\Http\Controllers\LokasiController;
 
+// ===== Bagian Achmed: Dashboard, Kategori Masalah, Lokasi =====
+Route::get('/dashboard', [DashboardController::class, 'penghuni']);
+Route::get('/admin/dashboard', [DashboardController::class, 'admin']);
+
+Route::get('/admin/kategori', [KategoriMasalahController::class, 'index']);
+Route::get('/admin/kategori/tambah', [KategoriMasalahController::class, 'create']);
+Route::post('/admin/kategori', [KategoriMasalahController::class, 'store']);
+Route::get('/admin/kategori/{id}/ubah', [KategoriMasalahController::class, 'edit']);
+Route::post('/admin/kategori/{id}/ubah', [KategoriMasalahController::class, 'update']);
+Route::post('/admin/kategori/{id}/hapus', [KategoriMasalahController::class, 'destroy']);
+
+Route::get('/admin/lokasi', [LokasiController::class, 'index']);
+Route::get('/admin/lokasi/tambah', [LokasiController::class, 'create']);
+Route::post('/admin/lokasi', [LokasiController::class, 'store']);
+Route::get('/admin/lokasi/{id}/ubah', [LokasiController::class, 'edit']);
+Route::post('/admin/lokasi/{id}/ubah', [LokasiController::class, 'update']);
+Route::post('/admin/lokasi/{id}/hapus', [LokasiController::class, 'destroy']);
+
+// ===== Data contoh milik Thomas (dipakai halaman laporan & fasilitas) =====
 $fasilitas = [
     ['id' => 1, 'nama' => 'Kolam Renang', 'deskripsi' => 'Kolam renang outdoor lantai dasar', 'jumlah_lokasi' => 2],
     ['id' => 2, 'nama' => 'Lift', 'deskripsi' => 'Lift penumpang tiap tower', 'jumlah_lokasi' => 4],
@@ -15,14 +37,6 @@ $kategori = [
     ['id' => 2, 'nama' => 'Kerusakan listrik', 'deskripsi' => 'Lampu mati atau korsleting', 'jumlah_laporan' => 4],
     ['id' => 3, 'nama' => 'Kebersihan', 'deskripsi' => 'Sampah menumpuk atau area kotor', 'jumlah_laporan' => 6],
     ['id' => 4, 'nama' => 'Kerusakan fasilitas', 'deskripsi' => 'Peralatan rusak atau tidak berfungsi', 'jumlah_laporan' => 3],
-];
-
-$lokasi = [
-    ['id' => 1, 'fasilitas' => 'Kolam Renang', 'lantai' => 'Lantai dasar', 'detail' => 'Sisi kolam anak'],
-    ['id' => 2, 'fasilitas' => 'Lift', 'lantai' => 'Tower A', 'detail' => 'Lift 1'],
-    ['id' => 3, 'fasilitas' => 'Lift', 'lantai' => 'Tower B', 'detail' => 'Lift 2'],
-    ['id' => 4, 'fasilitas' => 'Taman', 'lantai' => 'Lantai dasar', 'detail' => 'Dekat gazebo'],
-    ['id' => 5, 'fasilitas' => 'Parkir Basement', 'lantai' => 'Basement 1', 'detail' => 'Zona B'],
 ];
 
 $laporan = [
@@ -107,21 +121,6 @@ $laporan = [
     ],
 ];
 
-$perKategori = [
-    ['nama' => 'Kebersihan', 'jumlah' => 6, 'persen' => 100],
-    ['nama' => 'Kebocoran air', 'jumlah' => 5, 'persen' => 83],
-    ['nama' => 'Kerusakan listrik', 'jumlah' => 4, 'persen' => 67],
-    ['nama' => 'Kerusakan fasilitas', 'jumlah' => 3, 'persen' => 50],
-];
-
-$perFasilitas = [
-    ['nama' => 'Lift', 'jumlah' => 6, 'persen' => 100],
-    ['nama' => 'Kolam Renang', 'jumlah' => 4, 'persen' => 67],
-    ['nama' => 'Taman', 'jumlah' => 3, 'persen' => 50],
-    ['nama' => 'Parkir Basement', 'jumlah' => 2, 'persen' => 33],
-    ['nama' => 'Ruang Serbaguna', 'jumlah' => 1, 'persen' => 17],
-];
-
 $lokasiPerFasilitas = [
     '1' => ['Lantai dasar - Sisi kolam anak', 'Lantai dasar - Sisi kolam dewasa'],
     '2' => ['Tower A - Lift 1', 'Tower B - Lift 2'],
@@ -140,13 +139,6 @@ Route::get('/masuk', function () {
 
 Route::get('/daftar', function () {
     return view('auth.register');
-});
-
-Route::get('/dashboard', function () use ($laporan) {
-    return view('dashboard.penghuni', [
-        'role' => 'penghuni',
-        'laporan' => array_slice($laporan, 0, 3),
-    ]);
 });
 
 Route::get('/laporan', function () use ($laporan, $kategori) {
@@ -179,15 +171,6 @@ Route::get('/fasilitas', function () use ($fasilitas) {
     return view('fasilitas.index', [
         'role' => 'penghuni',
         'fasilitas' => $fasilitas,
-    ]);
-});
-
-Route::get('/admin/dashboard', function () use ($laporan, $perKategori, $perFasilitas) {
-    return view('dashboard.admin', [
-        'role' => 'admin',
-        'laporan' => array_slice($laporan, 0, 4),
-        'perKategori' => $perKategori,
-        'perFasilitas' => $perFasilitas,
     ]);
 });
 
@@ -229,55 +212,5 @@ Route::get('/admin/fasilitas/{id}/ubah', function ($id) use ($fasilitas) {
         'role' => 'admin',
         'judul' => 'Ubah fasilitas',
         'fasilitas' => $data,
-    ]);
-});
-
-Route::get('/admin/kategori', function () use ($kategori) {
-    return view('admin.kategori.index', [
-        'role' => 'admin',
-        'kategori' => $kategori,
-    ]);
-});
-
-Route::get('/admin/kategori/tambah', function () {
-    return view('admin.kategori.form', [
-        'role' => 'admin',
-        'judul' => 'Tambah kategori',
-    ]);
-});
-
-Route::get('/admin/kategori/{id}/ubah', function ($id) use ($kategori) {
-    $data = collect($kategori)->firstWhere('id', (int) $id);
-
-    return view('admin.kategori.form', [
-        'role' => 'admin',
-        'judul' => 'Ubah kategori',
-        'kategori' => $data,
-    ]);
-});
-
-Route::get('/admin/lokasi', function () use ($lokasi) {
-    return view('admin.lokasi.index', [
-        'role' => 'admin',
-        'lokasi' => $lokasi,
-    ]);
-});
-
-Route::get('/admin/lokasi/tambah', function () use ($fasilitas) {
-    return view('admin.lokasi.form', [
-        'role' => 'admin',
-        'judul' => 'Tambah lokasi',
-        'fasilitas' => $fasilitas,
-    ]);
-});
-
-Route::get('/admin/lokasi/{id}/ubah', function ($id) use ($lokasi, $fasilitas) {
-    $data = collect($lokasi)->firstWhere('id', (int) $id);
-
-    return view('admin.lokasi.form', [
-        'role' => 'admin',
-        'judul' => 'Ubah lokasi',
-        'lokasi' => $data,
-        'fasilitas' => $fasilitas,
     ]);
 });
