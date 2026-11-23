@@ -1,216 +1,242 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Penghuni\LaporanController;
+use App\Models\Fasilitas;
+use App\Models\KategoriMasalah;
+use App\Models\Laporan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\KategoriMasalahController;
-use App\Http\Controllers\LokasiController;
 
-// ===== Bagian Achmed: Dashboard, Kategori Masalah, Lokasi =====
-Route::get('/dashboard', [DashboardController::class, 'penghuni']);
-Route::get('/admin/dashboard', [DashboardController::class, 'admin']);
-
-Route::get('/admin/kategori', [KategoriMasalahController::class, 'index']);
-Route::get('/admin/kategori/tambah', [KategoriMasalahController::class, 'create']);
-Route::post('/admin/kategori', [KategoriMasalahController::class, 'store']);
-Route::get('/admin/kategori/{id}/ubah', [KategoriMasalahController::class, 'edit']);
-Route::post('/admin/kategori/{id}/ubah', [KategoriMasalahController::class, 'update']);
-Route::post('/admin/kategori/{id}/hapus', [KategoriMasalahController::class, 'destroy']);
-
-Route::get('/admin/lokasi', [LokasiController::class, 'index']);
-Route::get('/admin/lokasi/tambah', [LokasiController::class, 'create']);
-Route::post('/admin/lokasi', [LokasiController::class, 'store']);
-Route::get('/admin/lokasi/{id}/ubah', [LokasiController::class, 'edit']);
-Route::post('/admin/lokasi/{id}/ubah', [LokasiController::class, 'update']);
-Route::post('/admin/lokasi/{id}/hapus', [LokasiController::class, 'destroy']);
-
-// ===== Data contoh milik Thomas (dipakai halaman laporan & fasilitas) =====
-$fasilitas = [
-    ['id' => 1, 'nama' => 'Kolam Renang', 'deskripsi' => 'Kolam renang outdoor lantai dasar', 'jumlah_lokasi' => 2],
-    ['id' => 2, 'nama' => 'Lift', 'deskripsi' => 'Lift penumpang tiap tower', 'jumlah_lokasi' => 4],
-    ['id' => 3, 'nama' => 'Taman', 'deskripsi' => 'Taman dan area hijau bersama', 'jumlah_lokasi' => 3],
-    ['id' => 4, 'nama' => 'Parkir Basement', 'deskripsi' => 'Area parkir penghuni', 'jumlah_lokasi' => 2],
-    ['id' => 5, 'nama' => 'Ruang Serbaguna', 'deskripsi' => 'Aula untuk kegiatan penghuni', 'jumlah_lokasi' => 1],
-];
-
-$kategori = [
-    ['id' => 1, 'nama' => 'Kebocoran air', 'deskripsi' => 'Pipa bocor atau genangan air', 'jumlah_laporan' => 5],
-    ['id' => 2, 'nama' => 'Kerusakan listrik', 'deskripsi' => 'Lampu mati atau korsleting', 'jumlah_laporan' => 4],
-    ['id' => 3, 'nama' => 'Kebersihan', 'deskripsi' => 'Sampah menumpuk atau area kotor', 'jumlah_laporan' => 6],
-    ['id' => 4, 'nama' => 'Kerusakan fasilitas', 'deskripsi' => 'Peralatan rusak atau tidak berfungsi', 'jumlah_laporan' => 3],
-];
-
-$laporan = [
+$laporanDummy = [
     [
         'id' => 1,
         'judul' => 'Lampu koridor mati',
-        'pelapor' => 'Dimas Prakoso',
-        'telepon' => '0812-3456-7890',
+        'pelapor' => 'Sari Wulandari',
+        'telepon' => '0813-2233-4455',
         'fasilitas' => 'Lift',
         'lokasi' => 'Tower A - Lift 1',
         'kategori' => 'Kerusakan listrik',
         'tanggal' => '12 Nov 2026',
         'status' => 'Menunggu',
-        'deskripsi' => 'Lampu di depan lift Tower A mati sejak dua hari lalu. Koridor menjadi gelap pada malam hari.',
+        'deskripsi' => 'Lampu di depan lift Tower A mati sejak dua hari lalu.',
         'riwayat' => [
-            ['status' => 'Menunggu', 'waktu' => '12 Nov 2026, 19:20', 'nama' => 'Dimas Prakoso', 'catatan' => 'Laporan dibuat.'],
+            ['status' => 'Menunggu', 'waktu' => '12 Nov 2026, 19:20', 'nama' => 'Sari Wulandari', 'catatan' => 'Laporan dibuat.'],
         ],
     ],
     [
         'id' => 2,
         'judul' => 'Pipa kolam bocor',
-        'pelapor' => 'Dimas Prakoso',
-        'telepon' => '0812-3456-7890',
+        'pelapor' => 'Bayu Nugroho',
+        'telepon' => '0857-1122-3344',
         'fasilitas' => 'Kolam Renang',
         'lokasi' => 'Lantai dasar - Sisi kolam anak',
         'kategori' => 'Kebocoran air',
         'tanggal' => '10 Nov 2026',
         'status' => 'Diproses',
-        'deskripsi' => 'Ada rembesan air di sekitar kolam anak. Area lantai menjadi licin.',
+        'deskripsi' => 'Ada rembesan air di sekitar kolam anak.',
         'riwayat' => [
-            ['status' => 'Menunggu', 'waktu' => '10 Nov 2026, 08:15', 'nama' => 'Dimas Prakoso', 'catatan' => 'Laporan dibuat.'],
+            ['status' => 'Menunggu', 'waktu' => '10 Nov 2026, 08:15', 'nama' => 'Bayu Nugroho', 'catatan' => 'Laporan dibuat.'],
             ['status' => 'Diproses', 'waktu' => '11 Nov 2026, 09:40', 'nama' => 'Rina Kartika', 'catatan' => 'Teknisi dijadwalkan memeriksa pipa.'],
         ],
     ],
-    [
-        'id' => 3,
-        'judul' => 'Sampah menumpuk di taman',
-        'pelapor' => 'Dimas Prakoso',
-        'telepon' => '0812-3456-7890',
-        'fasilitas' => 'Taman',
-        'lokasi' => 'Lantai dasar - Dekat gazebo',
-        'kategori' => 'Kebersihan',
-        'tanggal' => '05 Nov 2026',
-        'status' => 'Selesai',
-        'deskripsi' => 'Tempat sampah di dekat gazebo penuh dan tidak diangkut selama tiga hari.',
-        'riwayat' => [
-            ['status' => 'Menunggu', 'waktu' => '05 Nov 2026, 07:10', 'nama' => 'Dimas Prakoso', 'catatan' => 'Laporan dibuat.'],
-            ['status' => 'Diproses', 'waktu' => '05 Nov 2026, 10:00', 'nama' => 'Rina Kartika', 'catatan' => 'Petugas kebersihan dihubungi.'],
-            ['status' => 'Selesai', 'waktu' => '06 Nov 2026, 08:30', 'nama' => 'Rina Kartika', 'catatan' => 'Sampah sudah diangkut dan area dibersihkan.'],
-        ],
-    ],
-    [
-        'id' => 4,
-        'judul' => 'Pintu lift tidak menutup',
-        'pelapor' => 'Sari Wulandari',
-        'telepon' => '0813-2233-4455',
-        'fasilitas' => 'Lift',
-        'lokasi' => 'Tower B - Lift 2',
-        'kategori' => 'Kerusakan fasilitas',
-        'tanggal' => '13 Nov 2026',
-        'status' => 'Menunggu',
-        'deskripsi' => 'Pintu lift Tower B tidak menutup sempurna dan sering terbuka kembali.',
-        'riwayat' => [
-            ['status' => 'Menunggu', 'waktu' => '13 Nov 2026, 16:45', 'nama' => 'Sari Wulandari', 'catatan' => 'Laporan dibuat.'],
-        ],
-    ],
-    [
-        'id' => 5,
-        'judul' => 'Lampu parkir redup',
-        'pelapor' => 'Bayu Nugroho',
-        'telepon' => '0857-1122-3344',
-        'fasilitas' => 'Parkir Basement',
-        'lokasi' => 'Basement 1 - Zona B',
-        'kategori' => 'Kerusakan listrik',
-        'tanggal' => '09 Nov 2026',
-        'status' => 'Ditolak',
-        'deskripsi' => 'Lampu di zona B redup sehingga sulit melihat saat memarkir kendaraan.',
-        'riwayat' => [
-            ['status' => 'Menunggu', 'waktu' => '09 Nov 2026, 20:05', 'nama' => 'Bayu Nugroho', 'catatan' => 'Laporan dibuat.'],
-            ['status' => 'Ditolak', 'waktu' => '10 Nov 2026, 11:20', 'nama' => 'Rina Kartika', 'catatan' => 'Lampu sudah dijadwalkan diganti pada pemeliharaan rutin bulan ini.'],
-        ],
-    ],
 ];
 
-$lokasiPerFasilitas = [
-    '1' => ['Lantai dasar - Sisi kolam anak', 'Lantai dasar - Sisi kolam dewasa'],
-    '2' => ['Tower A - Lift 1', 'Tower B - Lift 2'],
-    '3' => ['Lantai dasar - Dekat gazebo', 'Lantai dasar - Sisi timur'],
-    '4' => ['Basement 1 - Zona A', 'Basement 1 - Zona B'],
-    '5' => ['Lantai 2 - Aula utama'],
+$perKategori = [
+    ['nama' => 'Kebersihan', 'jumlah' => 6, 'persen' => 100],
+    ['nama' => 'Kebocoran air', 'jumlah' => 5, 'persen' => 83],
+    ['nama' => 'Kerusakan listrik', 'jumlah' => 4, 'persen' => 67],
+    ['nama' => 'Kerusakan fasilitas', 'jumlah' => 3, 'persen' => 50],
+];
+
+$perFasilitas = [
+    ['nama' => 'Lift', 'jumlah' => 6, 'persen' => 100],
+    ['nama' => 'Kolam Renang', 'jumlah' => 4, 'persen' => 67],
+    ['nama' => 'Taman', 'jumlah' => 3, 'persen' => 50],
+    ['nama' => 'Parkir Basement', 'jumlah' => 2, 'persen' => 33],
 ];
 
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    }
+
     return redirect('/masuk');
 });
 
-Route::get('/masuk', function () {
-    return view('auth.login');
-});
+Route::get('/masuk', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
+Route::post('/masuk', [AuthController::class, 'login'])->middleware('guest');
+Route::get('/daftar', [AuthController::class, 'showRegister'])->middleware('guest');
+Route::post('/daftar', [AuthController::class, 'register'])->middleware('guest');
 
-Route::get('/daftar', function () {
-    return view('auth.register');
-});
+Route::middleware('auth')->group(function () use ($laporanDummy, $perKategori, $perFasilitas) {
+    Route::post('/keluar', [AuthController::class, 'logout']);
 
-Route::get('/laporan', function () use ($laporan, $kategori) {
-    return view('laporan.index', [
-        'role' => 'penghuni',
-        'laporan' => array_slice($laporan, 0, 3),
-        'kategori' => $kategori,
-    ]);
-});
+    Route::get('/dashboard', function () {
+        $laporan = Laporan::with('fasilitas')
+            ->where('id_pengguna', auth()->id())
+            ->latest()
+            ->take(3)
+            ->get();
 
-Route::get('/laporan/buat', function () use ($fasilitas, $kategori, $lokasiPerFasilitas) {
-    return view('laporan.create', [
-        'role' => 'penghuni',
-        'fasilitas' => $fasilitas,
-        'kategori' => $kategori,
-        'lokasiPerFasilitas' => $lokasiPerFasilitas,
-    ]);
-});
+        $jumlah = [
+            'Menunggu' => Laporan::where('id_pengguna', auth()->id())->where('status', 'Menunggu')->count(),
+            'Diproses' => Laporan::where('id_pengguna', auth()->id())->where('status', 'Diproses')->count(),
+            'Selesai' => Laporan::where('id_pengguna', auth()->id())->where('status', 'Selesai')->count(),
+            'Ditolak' => Laporan::where('id_pengguna', auth()->id())->where('status', 'Ditolak')->count(),
+        ];
 
-Route::get('/laporan/{id}', function ($id) use ($laporan) {
-    $data = collect($laporan)->firstWhere('id', (int) $id);
+        return view('dashboard.penghuni', [
+            'role' => 'penghuni',
+            'laporan' => $laporan,
+            'jumlah' => $jumlah,
+        ]);
+    });
 
-    return view('laporan.show', [
-        'role' => 'penghuni',
-        'laporan' => $data,
-    ]);
-});
+    Route::get('/fasilitas', function () {
+        $fasilitas = Fasilitas::withCount('lokasi')->orderBy('nama_fasilitas')->get();
 
-Route::get('/fasilitas', function () use ($fasilitas) {
-    return view('fasilitas.index', [
-        'role' => 'penghuni',
-        'fasilitas' => $fasilitas,
-    ]);
-});
+        return view('fasilitas.index', [
+            'role' => 'penghuni',
+            'fasilitas' => $fasilitas,
+        ]);
+    });
 
-Route::get('/admin/laporan', function () use ($laporan, $fasilitas) {
-    return view('admin.laporan.index', [
-        'role' => 'admin',
-        'laporan' => $laporan,
-        'fasilitas' => $fasilitas,
-    ]);
-});
+    Route::get('/laporan', [LaporanController::class, 'index']);
+    Route::get('/laporan/buat', [LaporanController::class, 'create']);
+    Route::post('/laporan', [LaporanController::class, 'store']);
+    Route::get('/laporan/lokasi/{idFasilitas}', [LaporanController::class, 'lokasiByFasilitas']);
+    Route::get('/laporan/{id}', [LaporanController::class, 'show']);
 
-Route::get('/admin/laporan/{id}', function ($id) use ($laporan) {
-    $data = collect($laporan)->firstWhere('id', (int) $id);
+    Route::get('/admin/dashboard', function () use ($laporanDummy, $perKategori, $perFasilitas) {
+        $ringkasan = [
+            'Menunggu' => Laporan::where('status', 'Menunggu')->count(),
+            'Diproses' => Laporan::where('status', 'Diproses')->count(),
+            'Selesai' => Laporan::where('status', 'Selesai')->count(),
+            'Ditolak' => Laporan::where('status', 'Ditolak')->count(),
+        ];
 
-    return view('admin.laporan.show', [
-        'role' => 'admin',
-        'laporan' => $data,
-    ]);
-});
+        return view('dashboard.admin', [
+            'role' => 'admin',
+            'laporan' => $laporanDummy,
+            'perKategori' => $perKategori,
+            'perFasilitas' => $perFasilitas,
+            'ringkasan' => $ringkasan,
+        ]);
+    });
 
-Route::get('/admin/fasilitas', function () use ($fasilitas) {
-    return view('fasilitas.index', [
-        'role' => 'admin',
-        'fasilitas' => $fasilitas,
-    ]);
-});
+    Route::get('/admin/laporan', function () use ($laporanDummy) {
+        return view('admin.laporan.index', [
+            'role' => 'admin',
+            'laporan' => $laporanDummy,
+            'fasilitas' => Fasilitas::orderBy('nama_fasilitas')->get(),
+        ]);
+    });
 
-Route::get('/admin/fasilitas/tambah', function () {
-    return view('fasilitas.form', [
-        'role' => 'admin',
-        'judul' => 'Tambah fasilitas',
-    ]);
-});
+    Route::get('/admin/laporan/{id}', function ($id) use ($laporanDummy) {
+        $data = collect($laporanDummy)->firstWhere('id', (int) $id);
 
-Route::get('/admin/fasilitas/{id}/ubah', function ($id) use ($fasilitas) {
-    $data = collect($fasilitas)->firstWhere('id', (int) $id);
+        if (!$data) {
+            abort(404);
+        }
 
-    return view('fasilitas.form', [
-        'role' => 'admin',
-        'judul' => 'Ubah fasilitas',
-        'fasilitas' => $data,
-    ]);
+        return view('admin.laporan.show', [
+            'role' => 'admin',
+            'laporan' => $data,
+        ]);
+    });
+
+    Route::get('/admin/fasilitas', function () {
+        return view('fasilitas.index', [
+            'role' => 'admin',
+            'fasilitas' => Fasilitas::withCount('lokasi')->orderBy('nama_fasilitas')->get(),
+        ]);
+    });
+
+    Route::get('/admin/fasilitas/tambah', function () {
+        return view('fasilitas.form', [
+            'role' => 'admin',
+            'judul' => 'Tambah fasilitas',
+        ]);
+    });
+
+    Route::get('/admin/fasilitas/{id}/ubah', function ($id) {
+        $data = Fasilitas::find($id);
+
+        if (!$data) {
+            abort(404);
+        }
+
+        return view('fasilitas.form', [
+            'role' => 'admin',
+            'judul' => 'Ubah fasilitas',
+            'nama' => $data->nama_fasilitas,
+            'deskripsi' => $data->deskripsi,
+        ]);
+    });
+
+    Route::get('/admin/kategori', function () {
+        $kategori = KategoriMasalah::withCount('laporan')->orderBy('nama_kategori')->get();
+
+        return view('admin.kategori.index', [
+            'role' => 'admin',
+            'kategori' => $kategori,
+        ]);
+    });
+
+    Route::get('/admin/kategori/tambah', function () {
+        return view('admin.kategori.form', [
+            'role' => 'admin',
+            'judul' => 'Tambah kategori',
+        ]);
+    });
+
+    Route::get('/admin/kategori/{id}/ubah', function ($id) {
+        $data = KategoriMasalah::find($id);
+
+        if (!$data) {
+            abort(404);
+        }
+
+        return view('admin.kategori.form', [
+            'role' => 'admin',
+            'judul' => 'Ubah kategori',
+            'nama' => $data->nama_kategori,
+            'deskripsi' => $data->deskripsi,
+        ]);
+    });
+
+    Route::get('/admin/lokasi', function () {
+        $lokasi = App\Models\Lokasi::with('fasilitas')->orderBy('id_fasilitas')->get();
+
+        return view('admin.lokasi.index', [
+            'role' => 'admin',
+            'lokasi' => $lokasi,
+        ]);
+    });
+
+    Route::get('/admin/lokasi/tambah', function () {
+        return view('admin.lokasi.form', [
+            'role' => 'admin',
+            'judul' => 'Tambah lokasi',
+            'fasilitas' => Fasilitas::orderBy('nama_fasilitas')->get(),
+        ]);
+    });
+
+    Route::get('/admin/lokasi/{id}/ubah', function ($id) {
+        $data = App\Models\Lokasi::find($id);
+
+        if (!$data) {
+            abort(404);
+        }
+
+        return view('admin.lokasi.form', [
+            'role' => 'admin',
+            'judul' => 'Ubah lokasi',
+            'fasilitas' => Fasilitas::orderBy('nama_fasilitas')->get(),
+            'fasilitasTerpilih' => $data->id_fasilitas,
+            'lantai' => $data->lantai,
+            'detail' => $data->detail_lokasi,
+        ]);
+    });
 });

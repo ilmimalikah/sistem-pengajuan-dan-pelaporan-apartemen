@@ -30,13 +30,13 @@
                 @foreach ($fasilitas as $item)
                     <tr class="transition-colors hover:bg-[#faf9f6]">
                         <td class="table-td text-ink-soft">{{ $loop->iteration }}</td>
-                        <td class="table-td font-medium">{{ $item['nama'] }}</td>
-                        <td class="table-td text-ink-soft">{{ $item['deskripsi'] }}</td>
-                        <td class="table-td text-ink-soft">{{ $item['jumlah_lokasi'] }} lokasi</td>
+                        <td class="table-td font-medium">{{ $item->nama_fasilitas }}</td>
+                        <td class="table-td text-ink-soft">{{ $item->deskripsi }}</td>
+                        <td class="table-td text-ink-soft">{{ $item->lokasi_count }} lokasi</td>
                         @if ($role == 'admin')
                             <td class="table-td">
-                                <a href="/admin/fasilitas/{{ $item['id'] }}/ubah" class="text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">Ubah</a>
-                                <a href="/admin/fasilitas/{{ $item['id'] }}/hapus" class="ml-4 text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">Hapus</a>
+                                <a href="/admin/fasilitas/{{ $item->id_fasilitas }}/ubah" class="text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">Ubah</a>
+                                <a href="/admin/fasilitas/{{ $item->id_fasilitas }}/hapus" class="ml-4 text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">Hapus</a>
                             </td>
                         @endif
                     </tr>
@@ -44,6 +44,4 @@
             </tbody>
         </table>
     </div>
-
-    <p class="mt-3 text-xs text-ink-soft">Data contoh untuk tampilan.</p>
 @endsection

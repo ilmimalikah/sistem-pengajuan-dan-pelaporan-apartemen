@@ -13,13 +13,6 @@
         <a href="/admin/kategori/tambah" class="btn-primary">Tambah kategori</a>
     </div>
 
-    @if (session('success'))
-        <div class="card mt-6 px-5 py-3 text-sm">{{ session('success') }}</div>
-    @endif
-    @if (session('error'))
-        <div class="card mt-6 px-5 py-3 text-sm text-brand">{{ session('error') }}</div>
-    @endif
-
     <div class="card mt-8 overflow-x-auto">
         <table class="w-full min-w-[560px]">
             <thead>
@@ -32,25 +25,18 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($kategori as $item)
+                @foreach ($kategori as $item)
                     <tr class="transition-colors hover:bg-[#faf9f6]">
                         <td class="table-td text-ink-soft">{{ $loop->iteration }}</td>
-                        <td class="table-td font-medium">{{ $item['nama'] }}</td>
-                        <td class="table-td text-ink-soft">{{ $item['deskripsi'] }}</td>
-                        <td class="table-td text-ink-soft">{{ $item['jumlah_laporan'] }}</td>
-                        <td class="table-td whitespace-nowrap">
-                            <a href="/admin/kategori/{{ $item['id'] }}/ubah" class="text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">Ubah</a>
-                            <form action="/admin/kategori/{{ $item['id'] }}/hapus" method="post" class="ml-4 inline" onsubmit="return confirm('Yakin hapus kategori ini?')">
-                                @csrf
-                                <button type="submit" class="text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">Hapus</button>
-                            </form>
+                        <td class="table-td font-medium">{{ $item->nama_kategori }}</td>
+                        <td class="table-td text-ink-soft">{{ $item->deskripsi }}</td>
+                        <td class="table-td text-ink-soft">{{ $item->laporan_count }}</td>
+                        <td class="table-td">
+                            <a href="/admin/kategori/{{ $item->id_kategori }}/ubah" class="text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">Ubah</a>
+                            <a href="/admin/kategori/{{ $item->id_kategori }}/hapus" class="ml-4 text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">Hapus</a>
                         </td>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="table-td text-center text-ink-soft">Belum ada kategori.</td>
-                    </tr>
-                @endforelse
+                @endforeach
             </tbody>
         </table>
     </div>

@@ -30,7 +30,7 @@
             <select id="fasilitas" name="fasilitas" class="field-input">
                 <option value="">Semua fasilitas</option>
                 @foreach ($fasilitas as $f)
-                    <option>{{ $f['nama'] }}</option>
+                    <option>{{ $f->nama_fasilitas }}</option>
                 @endforeach
             </select>
         </div>

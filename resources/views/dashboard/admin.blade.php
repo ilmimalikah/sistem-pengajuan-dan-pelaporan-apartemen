@@ -8,7 +8,7 @@
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <h1 class="text-[32px] leading-tight">Dashboard admin</h1>
-            <p class="mt-1 text-sm text-ink-soft">Ringkasan laporan permasalahan seluruh penghuni ({{ $total }} laporan).</p>
+            <p class="mt-1 text-sm text-ink-soft">Ringkasan laporan permasalahan seluruh penghuni.</p>
         </div>
         <a href="/admin/laporan" class="btn-ghost">Kelola laporan</a>
     </div>

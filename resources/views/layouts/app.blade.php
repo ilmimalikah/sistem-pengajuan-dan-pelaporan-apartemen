@@ -13,7 +13,7 @@
     @endif
 
     @if (!isset($userName))
-        @php $userName = $role == 'admin' ? 'Rina Kartika' : 'Dimas Prakoso'; @endphp
+        @php $userName = auth()->check() ? auth()->user()->nama : ($role == 'admin' ? 'Rina Kartika' : 'Dimas Prakoso'); @endphp
     @endif
 
     <header class="border-b border-line bg-white">
@@ -48,7 +48,10 @@
             <div class="flex items-center gap-4 text-sm">
                 <span class="hidden text-ink-soft sm:inline">{{ $userName }}</span>
                 <span class="hidden h-4 w-px bg-line sm:inline"></span>
-                <a href="/masuk" class="text-sm text-ink-soft hover:text-brand">Keluar</a>
+                <form action="/keluar" method="post">
+                    @csrf
+                    <button type="submit" class="text-sm text-ink-soft hover:text-brand">Keluar</button>
+                </form>
             </div>
         </div>
 
