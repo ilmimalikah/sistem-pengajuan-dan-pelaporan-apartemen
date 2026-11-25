@@ -79,12 +79,12 @@
 
     <div class="card mt-4">
         @forelse ($laporan as $item)
-            <a href="/admin/laporan/{{ $item['id'] }}" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-[#faf9f6] @if (!$loop->last) border-b border-line-soft @endif">
+            <a href="{{ route('admin.laporan.show', $item->id_laporan) }}" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-[#faf9f6] @if (!$loop->last) border-b border-line-soft @endif">
                 <div>
-                    <p class="text-sm font-medium">{{ $item['judul'] }}</p>
-                    <p class="mt-1 text-xs text-ink-soft">{{ $item['pelapor'] }} &middot; {{ $item['tanggal'] }}</p>
+                    <p class="text-sm font-medium">{{ $item->kategori->nama_kategori ?? 'Laporan' }} — {{ $item->fasilitas->nama_fasilitas ?? '-' }}</p>
+                    <p class="mt-1 text-xs text-ink-soft">{{ $item->penghuni->nama }} &middot; {{ $item->created_at->format('d M Y') }}</p>
                 </div>
-                <x-status :status="$item['status']" />
+                <x-status :status="$item->status" />
             </a>
         @empty
             <p class="px-5 py-4 text-sm text-ink-soft">Belum ada laporan masuk.</p>

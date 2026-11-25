@@ -1,60 +1,14 @@
 <?php
 
+use App\Http\Controllers\Admin\LaporanController as AdminLaporanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Penghuni\LaporanController;
 use App\Models\Fasilitas;
 use App\Models\KategoriMasalah;
 use App\Models\Laporan;
+use App\Models\Lokasi;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
-$laporanDummy = [
-    [
-        'id' => 1,
-        'judul' => 'Lampu koridor mati',
-        'pelapor' => 'Sari Wulandari',
-        'telepon' => '0813-2233-4455',
-        'fasilitas' => 'Lift',
-        'lokasi' => 'Tower A - Lift 1',
-        'kategori' => 'Kerusakan listrik',
-        'tanggal' => '12 Nov 2026',
-        'status' => 'Menunggu',
-        'deskripsi' => 'Lampu di depan lift Tower A mati sejak dua hari lalu.',
-        'riwayat' => [
-            ['status' => 'Menunggu', 'waktu' => '12 Nov 2026, 19:20', 'nama' => 'Sari Wulandari', 'catatan' => 'Laporan dibuat.'],
-        ],
-    ],
-    [
-        'id' => 2,
-        'judul' => 'Pipa kolam bocor',
-        'pelapor' => 'Bayu Nugroho',
-        'telepon' => '0857-1122-3344',
-        'fasilitas' => 'Kolam Renang',
-        'lokasi' => 'Lantai dasar - Sisi kolam anak',
-        'kategori' => 'Kebocoran air',
-        'tanggal' => '10 Nov 2026',
-        'status' => 'Diproses',
-        'deskripsi' => 'Ada rembesan air di sekitar kolam anak.',
-        'riwayat' => [
-            ['status' => 'Menunggu', 'waktu' => '10 Nov 2026, 08:15', 'nama' => 'Bayu Nugroho', 'catatan' => 'Laporan dibuat.'],
-            ['status' => 'Diproses', 'waktu' => '11 Nov 2026, 09:40', 'nama' => 'Rina Kartika', 'catatan' => 'Teknisi dijadwalkan memeriksa pipa.'],
-        ],
-    ],
-];
-
-$perKategori = [
-    ['nama' => 'Kebersihan', 'jumlah' => 6, 'persen' => 100],
-    ['nama' => 'Kebocoran air', 'jumlah' => 5, 'persen' => 83],
-    ['nama' => 'Kerusakan listrik', 'jumlah' => 4, 'persen' => 67],
-    ['nama' => 'Kerusakan fasilitas', 'jumlah' => 3, 'persen' => 50],
-];
-
-$perFasilitas = [
-    ['nama' => 'Lift', 'jumlah' => 6, 'persen' => 100],
-    ['nama' => 'Kolam Renang', 'jumlah' => 4, 'persen' => 67],
-    ['nama' => 'Taman', 'jumlah' => 3, 'persen' => 50],
-    ['nama' => 'Parkir Basement', 'jumlah' => 2, 'persen' => 33],
-];
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -69,7 +23,7 @@ Route::post('/masuk', [AuthController::class, 'login'])->middleware('guest');
 Route::get('/daftar', [AuthController::class, 'showRegister'])->middleware('guest');
 Route::post('/daftar', [AuthController::class, 'register'])->middleware('guest');
 
-Route::middleware('auth')->group(function () use ($laporanDummy, $perKategori, $perFasilitas) {
+Route::middleware('auth')->group(function () {
     Route::post('/keluar', [AuthController::class, 'logout']);
 
     Route::get('/dashboard', function () {
@@ -108,7 +62,7 @@ Route::middleware('auth')->group(function () use ($laporanDummy, $perKategori, $
     Route::get('/laporan/lokasi/{idFasilitas}', [LaporanController::class, 'lokasiByFasilitas']);
     Route::get('/laporan/{id}', [LaporanController::class, 'show']);
 
-    Route::get('/admin/dashboard', function () use ($laporanDummy, $perKategori, $perFasilitas) {
+    Route::get('/admin/dashboard', function () {
         $ringkasan = [
             'Menunggu' => Laporan::where('status', 'Menunggu')->count(),
             'Diproses' => Laporan::where('status', 'Diproses')->count(),
@@ -116,34 +70,47 @@ Route::middleware('auth')->group(function () use ($laporanDummy, $perKategori, $
             'Ditolak' => Laporan::where('status', 'Ditolak')->count(),
         ];
 
+        $perKategori = Laporan::query()
+            ->selectRaw('id_kategori, COUNT(*) as jumlah')
+            ->with('kategori')
+            ->groupBy('id_kategori')
+            ->orderByDesc('jumlah')
+            ->take(4)
+            ->get();
+        $maksKategori = max((int) $perKategori->max('jumlah'), 1);
+        $perKategori = $perKategori->map(fn ($item) => [
+            'nama' => $item->kategori->nama_kategori,
+            'jumlah' => $item->jumlah,
+            'persen' => (int) round($item->jumlah / $maksKategori * 100),
+        ]);
+
+        $perFasilitas = Laporan::query()
+            ->selectRaw('id_fasilitas, COUNT(*) as jumlah')
+            ->with('fasilitas')
+            ->groupBy('id_fasilitas')
+            ->orderByDesc('jumlah')
+            ->take(4)
+            ->get();
+        $maksFasilitas = max((int) $perFasilitas->max('jumlah'), 1);
+        $perFasilitas = $perFasilitas->map(fn ($item) => [
+            'nama' => $item->fasilitas->nama_fasilitas,
+            'jumlah' => $item->jumlah,
+            'persen' => (int) round($item->jumlah / $maksFasilitas * 100),
+        ]);
+
         return view('dashboard.admin', [
             'role' => 'admin',
-            'laporan' => $laporanDummy,
+            'laporan' => Laporan::with(['penghuni', 'kategori', 'fasilitas'])->latest()->take(5)->get(),
             'perKategori' => $perKategori,
             'perFasilitas' => $perFasilitas,
             'ringkasan' => $ringkasan,
         ]);
-    });
+    })->middleware('admin');
 
-    Route::get('/admin/laporan', function () use ($laporanDummy) {
-        return view('admin.laporan.index', [
-            'role' => 'admin',
-            'laporan' => $laporanDummy,
-            'fasilitas' => Fasilitas::orderBy('nama_fasilitas')->get(),
-        ]);
-    });
-
-    Route::get('/admin/laporan/{id}', function ($id) use ($laporanDummy) {
-        $data = collect($laporanDummy)->firstWhere('id', (int) $id);
-
-        if (!$data) {
-            abort(404);
-        }
-
-        return view('admin.laporan.show', [
-            'role' => 'admin',
-            'laporan' => $data,
-        ]);
+    Route::middleware('admin')->prefix('admin/laporan')->name('admin.laporan.')->group(function () {
+        Route::get('/', [AdminLaporanController::class, 'index'])->name('index');
+        Route::get('/{id}', [AdminLaporanController::class, 'show'])->name('show');
+        Route::post('/{id}', [AdminLaporanController::class, 'update'])->name('update');
     });
 
     Route::get('/admin/fasilitas', function () {
@@ -163,7 +130,7 @@ Route::middleware('auth')->group(function () use ($laporanDummy, $perKategori, $
     Route::get('/admin/fasilitas/{id}/ubah', function ($id) {
         $data = Fasilitas::find($id);
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -194,7 +161,7 @@ Route::middleware('auth')->group(function () use ($laporanDummy, $perKategori, $
     Route::get('/admin/kategori/{id}/ubah', function ($id) {
         $data = KategoriMasalah::find($id);
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
@@ -207,7 +174,7 @@ Route::middleware('auth')->group(function () use ($laporanDummy, $perKategori, $
     });
 
     Route::get('/admin/lokasi', function () {
-        $lokasi = App\Models\Lokasi::with('fasilitas')->orderBy('id_fasilitas')->get();
+        $lokasi = Lokasi::with('fasilitas')->orderBy('id_fasilitas')->get();
 
         return view('admin.lokasi.index', [
             'role' => 'admin',
@@ -224,9 +191,9 @@ Route::middleware('auth')->group(function () use ($laporanDummy, $perKategori, $
     });
 
     Route::get('/admin/lokasi/{id}/ubah', function ($id) {
-        $data = App\Models\Lokasi::find($id);
+        $data = Lokasi::find($id);
 
-        if (!$data) {
+        if (! $data) {
             abort(404);
         }
 
