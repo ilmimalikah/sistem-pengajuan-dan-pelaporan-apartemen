@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Penghuni\LaporanController;
 use App\Http\Controllers\FasilitasController;
 use App\Http\Controllers\KategoriMasalahController;
+use App\Http\Controllers\LokasiController;
 use App\Models\Fasilitas;
 use App\Models\KategoriMasalah;
 use App\Models\Laporan;
@@ -147,37 +148,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/{id}/ubah', 'update')->name('update');
             Route::post('/{id}/hapus', 'destroy')->name('destroy');
         });
-    Route::get('/admin/lokasi', function () {
-        $lokasi = Lokasi::with('fasilitas')->orderBy('id_fasilitas')->get();
-
-        return view('admin.lokasi.index', [
-            'role' => 'admin',
-            'lokasi' => $lokasi,
-        ]);
-    });
-
-    Route::get('/admin/lokasi/tambah', function () {
-        return view('admin.lokasi.form', [
-            'role' => 'admin',
-            'judul' => 'Tambah lokasi',
-            'fasilitas' => Fasilitas::orderBy('nama_fasilitas')->get(),
-        ]);
-    });
-
-    Route::get('/admin/lokasi/{id}/ubah', function ($id) {
-        $data = Lokasi::find($id);
-
-        if (! $data) {
-            abort(404);
-        }
-
-        return view('admin.lokasi.form', [
-            'role' => 'admin',
-            'judul' => 'Ubah lokasi',
-            'fasilitas' => Fasilitas::orderBy('nama_fasilitas')->get(),
-            'fasilitasTerpilih' => $data->id_fasilitas,
-            'lantai' => $data->lantai,
-            'detail' => $data->detail_lokasi,
-        ]);
-    });
+    Route::middleware('admin')
+        ->prefix('admin/lokasi')
+        ->name('admin.lokasi.')
+        ->controller(LokasiController::class)
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/tambah', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{id}/ubah', 'edit')->name('edit');
+            Route::post('/{id}/ubah', 'update')->name('update');
+            Route::post('/{id}/hapus', 'destroy')->name('destroy');
+        });
 });
