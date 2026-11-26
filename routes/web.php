@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\LaporanController as AdminLaporanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Penghuni\LaporanController;
+use App\Http\Controllers\FasilitasController;
+use App\Http\Controllers\KategoriMasalahController;
 use App\Models\Fasilitas;
 use App\Models\KategoriMasalah;
 use App\Models\Laporan;
@@ -28,16 +30,16 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', function () {
         $laporan = Laporan::with('fasilitas')
-            ->where('id_pengguna', auth()->id())
+            ->where('id_pengguna', Auth::user()->id_pengguna)
             ->latest()
             ->take(3)
             ->get();
 
         $jumlah = [
-            'Menunggu' => Laporan::where('id_pengguna', auth()->id())->where('status', 'Menunggu')->count(),
-            'Diproses' => Laporan::where('id_pengguna', auth()->id())->where('status', 'Diproses')->count(),
-            'Selesai' => Laporan::where('id_pengguna', auth()->id())->where('status', 'Selesai')->count(),
-            'Ditolak' => Laporan::where('id_pengguna', auth()->id())->where('status', 'Ditolak')->count(),
+            'Menunggu' => Laporan::where('id_pengguna', Auth::user()->id_pengguna)->where('status', 'Menunggu')->count(),
+            'Diproses' => Laporan::where('id_pengguna', Auth::user()->id_pengguna)->where('status', 'Diproses')->count(),
+            'Selesai' => Laporan::where('id_pengguna', Auth::user()->id_pengguna)->where('status', 'Selesai')->count(),
+            'Ditolak' => Laporan::where('id_pengguna', Auth::user()->id_pengguna)->where('status', 'Ditolak')->count(),
         ];
 
         return view('dashboard.penghuni', [
@@ -78,7 +80,7 @@ Route::middleware('auth')->group(function () {
             ->take(4)
             ->get();
         $maksKategori = max((int) $perKategori->max('jumlah'), 1);
-        $perKategori = $perKategori->map(fn ($item) => [
+        $perKategori = $perKategori->map(fn($item) => [
             'nama' => $item->kategori->nama_kategori,
             'jumlah' => $item->jumlah,
             'persen' => (int) round($item->jumlah / $maksKategori * 100),
@@ -92,7 +94,7 @@ Route::middleware('auth')->group(function () {
             ->take(4)
             ->get();
         $maksFasilitas = max((int) $perFasilitas->max('jumlah'), 1);
-        $perFasilitas = $perFasilitas->map(fn ($item) => [
+        $perFasilitas = $perFasilitas->map(fn($item) => [
             'nama' => $item->fasilitas->nama_fasilitas,
             'jumlah' => $item->jumlah,
             'persen' => (int) round($item->jumlah / $maksFasilitas * 100),
@@ -113,66 +115,38 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}', [AdminLaporanController::class, 'update'])->name('update');
     });
 
-    Route::get('/admin/fasilitas', function () {
-        return view('fasilitas.index', [
-            'role' => 'admin',
-            'fasilitas' => Fasilitas::withCount('lokasi')->orderBy('nama_fasilitas')->get(),
-        ]);
-    });
 
-    Route::get('/admin/fasilitas/tambah', function () {
-        return view('fasilitas.form', [
-            'role' => 'admin',
-            'judul' => 'Tambah fasilitas',
-        ]);
-    });
+    Route::middleware('admin')
+        ->prefix('admin/fasilitas')
+        ->name('admin.fasilitas.')
+        ->controller(FasilitasController::class)
+        ->group(function () {
 
-    Route::get('/admin/fasilitas/{id}/ubah', function ($id) {
-        $data = Fasilitas::find($id);
+            Route::get('/', 'index')->name('index');
 
-        if (! $data) {
-            abort(404);
-        }
+            Route::get('/tambah', 'create')->name('create');
 
-        return view('fasilitas.form', [
-            'role' => 'admin',
-            'judul' => 'Ubah fasilitas',
-            'nama' => $data->nama_fasilitas,
-            'deskripsi' => $data->deskripsi,
-        ]);
-    });
+            Route::post('/', 'store')->name('store');
 
-    Route::get('/admin/kategori', function () {
-        $kategori = KategoriMasalah::withCount('laporan')->orderBy('nama_kategori')->get();
+            Route::get('/{id}/ubah', 'edit')->name('edit');
 
-        return view('admin.kategori.index', [
-            'role' => 'admin',
-            'kategori' => $kategori,
-        ]);
-    });
+            Route::post('/{id}/ubah', 'update')->name('update');
 
-    Route::get('/admin/kategori/tambah', function () {
-        return view('admin.kategori.form', [
-            'role' => 'admin',
-            'judul' => 'Tambah kategori',
-        ]);
-    });
+            Route::post('/{id}/hapus', 'destroy')->name('destroy');
+        });
 
-    Route::get('/admin/kategori/{id}/ubah', function ($id) {
-        $data = KategoriMasalah::find($id);
-
-        if (! $data) {
-            abort(404);
-        }
-
-        return view('admin.kategori.form', [
-            'role' => 'admin',
-            'judul' => 'Ubah kategori',
-            'nama' => $data->nama_kategori,
-            'deskripsi' => $data->deskripsi,
-        ]);
-    });
-
+    Route::middleware('admin')
+        ->prefix('admin/kategori')
+        ->name('admin.kategori.')
+        ->controller(KategoriMasalahController::class)
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/tambah', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{id}/ubah', 'edit')->name('edit');
+            Route::post('/{id}/ubah', 'update')->name('update');
+            Route::post('/{id}/hapus', 'destroy')->name('destroy');
+        });
     Route::get('/admin/lokasi', function () {
         $lokasi = Lokasi::with('fasilitas')->orderBy('id_fasilitas')->get();
 

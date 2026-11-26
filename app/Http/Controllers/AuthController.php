@@ -13,6 +13,7 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+
     public function login(Request $request)
     {
         $data = $request->validate([
@@ -20,7 +21,12 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($data, $request->boolean('remember'))) {
+        $credentials = [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ];
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             if (Auth::user()->peran == 'admin') {
@@ -34,6 +40,7 @@ class AuthController extends Controller
             'email' => 'Email atau kata sandi salah.',
         ])->onlyInput('email');
     }
+
 
     public function showRegister()
     {
