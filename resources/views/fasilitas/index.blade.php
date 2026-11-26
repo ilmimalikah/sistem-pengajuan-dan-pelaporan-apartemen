@@ -36,13 +36,15 @@
                         @if ($role == 'admin')
                             <td class="table-td">
                                 <a href="/admin/fasilitas/{{ $item->id_fasilitas }}/ubah"
-                                    class="text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">Ubah</a>
+                                    class="text-ink-soft hover:text-brand" title="Ubah">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+
                                 <form action="{{ route('admin.fasilitas.destroy', $item->id_fasilitas) }}" method="POST"
                                     class="inline">
                                     @csrf
-                                    <button type="submit"
-                                        class="ml-4 text-sm text-ink-soft underline decoration-line underline-offset-4 hover:text-brand">
-                                        Hapus
+                                    <button type="submit" class="ml-4 text-ink-soft hover:text-red-600" title="Hapus">
+                                        <i class="bi bi-trash3"></i>
                                     </button>
                                 </form>
                             </td>
