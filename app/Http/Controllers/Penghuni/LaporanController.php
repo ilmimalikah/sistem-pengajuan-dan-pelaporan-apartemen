@@ -8,6 +8,8 @@ use App\Models\KategoriMasalah;
 use App\Models\Laporan;
 use App\Models\Lokasi;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 
 class LaporanController extends Controller
 {
@@ -16,7 +18,7 @@ class LaporanController extends Controller
         $kategoriList = KategoriMasalah::orderBy('nama_kategori')->get();
 
         $laporan = Laporan::with(['fasilitas', 'kategori', 'lokasi'])
-            ->where('id_pengguna', auth()->id())
+            ->where('id_pengguna', Auth::user()->id_pengguna)
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
@@ -54,13 +56,17 @@ class LaporanController extends Controller
     {
         $data = $request->validate([
             'id_fasilitas' => 'required|exists:fasilitas,id_fasilitas',
-            'id_lokasi' => 'nullable|exists:lokasi,id_lokasi',
+            'id_lokasi' => [
+                'nullable',
+                Rule::exists('lokasi', 'id_lokasi')
+                    ->where(fn($query) => $query->where('id_fasilitas', $request->id_fasilitas)),
+            ],
             'id_kategori' => 'required|exists:kategori_masalah,id_kategori',
             'deskripsi' => 'required|string|min:10|max:1000',
         ]);
 
         $laporan = Laporan::create([
-            'id_pengguna' => auth()->id(),
+            'id_pengguna' => Auth::user()->id_pengguna,
             'id_fasilitas' => $data['id_fasilitas'],
             'id_lokasi' => $data['id_lokasi'] ?? null,
             'id_kategori' => $data['id_kategori'],
@@ -69,9 +75,9 @@ class LaporanController extends Controller
         ]);
 
         $laporan->riwayatLaporan()->create([
-            'id_admin' => auth()->id(),
+            'id_admin' => null,
             'status' => 'Menunggu',
-            'catatan' => 'Laporan dibuat.',
+            'catatan' => 'Laporan dibuat oleh penghuni.',
         ]);
 
         return redirect('/laporan/' . $laporan->id_laporan)
@@ -81,7 +87,7 @@ class LaporanController extends Controller
     public function show($id)
     {
         $laporan = Laporan::with(['fasilitas', 'kategori', 'lokasi', 'riwayatLaporan.admin'])
-            ->where('id_pengguna', auth()->id())
+            ->where('id_pengguna', Auth::user()->id_pengguna)
             ->findOrFail($id);
 
         $riwayat = $laporan->riwayatLaporan->map(function ($item) {
