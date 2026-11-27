@@ -17,7 +17,8 @@
 
         <div>
             <label for="email" class="field-label">Email</label>
-            <input type="email" id="email" name="email" class="field-input" placeholder="nama@email.com" value="{{ old('email') }}">
+            <input type="email" id="email" name="email" class="field-input" placeholder="nama@email.com"
+                value="{{ old('email') }}">
         </div>
 
         <div>
@@ -37,13 +38,7 @@
 
     <p class="mt-6 text-sm text-ink-soft">
         Belum punya akun?
-        <a href="/daftar" class="text-ink underline decoration-line underline-offset-4 hover:text-brand">Daftar sebagai penghuni</a>
+        <a href="/daftar" class="text-ink underline decoration-line underline-offset-4 hover:text-brand">Daftar sebagai
+            penghuni</a>
     </p>
-
-    <div class="mt-8 border-t border-line-soft pt-4 text-xs text-ink-soft">
-        <p><strong class="font-medium text-ink">Akun demo</strong></p>
-        <p class="mt-1">Penghuni: thomas@example.com</p>
-        <p>Admin: rina@example.com</p>
-        <p>Sandi: password</p>
-    </div>
 @endsection
